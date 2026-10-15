@@ -35,6 +35,8 @@ scripts/build-app.sh --install   # 建置並安裝到 ~/Applications
 scripts/build-app.sh --debug     # DEBUG 版：含驗證用控制通道（沿用第二版，見 docs/archive/v2/design.md §13）
 scripts/make-dmg.sh              # release 建置並產生 DMG（dist/Shiyin-<版本>.dmg，含安裝說明 PDF）
 scripts/make-signing-cert.sh     # 建立自簽憑證；加 --trust 信任它（要使用者輸入登入密碼）
+scripts/export-signing-cert.sh --to-github <owner/repo>   # 把自簽憑證設成 GitHub Actions 的 secrets（私鑰會離開電腦，要使用者同意）
+# CI：.github/workflows/release.yml，推 v* tag 就建置並發布 Release；手動執行只產出 artifact
 swiftc scripts/dev/shiyinctl.swift -o ~/Library/Caches/ShiyinBuild/shiyinctl
 ~/Library/Caches/ShiyinBuild/shiyinctl state /tmp/s.json      # 讀狀態；其他指令見 Sources/Shiyin/Debug/DebugControl.swift
 open -g build/Shiyin.app
