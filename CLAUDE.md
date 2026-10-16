@@ -76,6 +76,7 @@ sqlite3 ~/Library/Application\ Support/Shiyin/shiyin.sqlite # 看資料
 - 截圖：
   - `shiyinctl snapshot` 用 ImageRenderer，不會跳出視窗，但畫不出 AppKit 元件（TextField、Picker、ScrollView 會變成黃色佔位框），適合看排版、顏色。
   - 要看真正的畫面，用 `screencapture -x -o -l <視窗編號>` 只擷取拾音的視窗（視窗編號用 CGWindowListCopyWindowInfo 依 PID 找）。螢幕鎖定時拍不到。
+- 從這個終端機（Claude Code）用 `open` 開 app，app 會繼承 Claude Code session 的環境變數，子程序的 `claude` 會沿用這個 session 的登入。要模擬使用者的電腦（例如沒登入）時，用 `env -i HOME=… PATH=/usr/bin:/bin SHIYIN_HOME=… <app>/Contents/MacOS/Shiyin &` 啟動。
 - 英文介面：直接執行 `build/Shiyin.app/Contents/MacOS/Shiyin -AppleLanguages "(en)"`（要用示範資料時前面加 `SHIYIN_HOME=…`）；中文介面就是系統語言。改會議語言用 `shiyinctl language <id> zh|en`。
 - 還沒完成首次使用引導的話，每次啟動都會打開引導視窗，測試時記得用 `shiyinctl closewindow onboarding` 關掉。
 - 測試資料會寫進使用者真正的資料庫。測完用 `shiyinctl purge <id>` 刪掉自己建立的會議，改過的設定用 `defaults delete com.weiwei.shiyin <key>` 還原。
