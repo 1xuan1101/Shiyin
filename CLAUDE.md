@@ -87,7 +87,7 @@ sqlite3 ~/Library/Application\ Support/Shiyin/shiyin.sqlite # 看資料
 - 測 app 內更新：`scripts/dev/make-update-fixtures.sh <資料夾>` 產生正常、SHA 不符、簽章不符、同版本四種更新檔，在那個資料夾跑 `python3 -m http.server 18765 --bind 127.0.0.1`，再用 `shiyinctl setupdateurl http://127.0.0.1:18765/good.json`、`checkupdate`、`installupdate`。
 - 全域快捷鍵不能用送按鍵測（見上面），用 `shiyinctl hotkey` 模擬按下。
 - 日文（3.3）：`scripts/dev/make-eval-data-ja.py` 產生日文評估資料（合成會議、國會聽證、FLEURS）。`shiyinctl import lang=ja <檔案>` 用日文匯入（不用改共用的預設語言）；`shiyinctl detect-eval <音檔> <開始秒數> <輸出.json>` 用 app 的語言偵測跑一段；`shiyinctl recordlang <zh|en|ja>` 錄音中換語言（等於按「改回」）；`shiyinctl model start|pause|delete japanese|languageDetection` 管其他模型。
-- 設定頁是 `Form`，`shiyinctl snapshot` 畫不出來（一片空白）。要看真的畫面：把 app 拉到前景（System Events 的 `set frontmost`），用 AX 點 app 自己的選單和按鈕（設定的分頁是 `button "錄音" of toolbar 1`），再 `screencapture -l <視窗編號>`；螢幕上鎖時截不到。選單裡的選項用 AX 點會寫進共用的 UserDefaults，測完要 `defaults delete`。
+- 設定頁是 `Form`，`shiyinctl snapshot` 畫不出來（一片空白）。 要測按鍵或右鍵時，用 `CGEvent.postToPid(拾音的 pid)` 只送給拾音（不經過最前面的 app）；輸入框和清單的焦點用 AX 的 `AXFocused` 設，不要靠點擊。座標點擊（`click at`）會點到當下最上層的視窗，點之前一定要確認拾音在最前面。測模型下載出錯用 `shiyinctl modelurl <模型> <網址>` 指到本機伺服器。要看真的畫面：把 app 拉到前景（System Events 的 `set frontmost`），用 AX 點 app 自己的選單和按鈕（設定的分頁是 `button "錄音" of toolbar 1`），再 `screencapture -l <視窗編號>`；螢幕上鎖時截不到。選單裡的選項用 AX 點會寫進共用的 UserDefaults，測完要 `defaults delete`。
 - 示範資料夾的 `models` 是指到正式資料夾（`~/Library/Application Support/Shiyin/models`）的連結：在示範資料夾下載的模型會存進正式資料夾；設定頁的「模型」大小在示範資料夾會顯示 0（不跟著連結算）。
 - `AVAudioFile` 關檔後 `length` 會變 0，不能用它判斷錄了多久（曾經因此刪掉整場錄音）。
 - zsh 內建的 `log` 會蓋掉系統指令，要用 `/usr/bin/log`；zsh 不會依 IFS 切字串；`rm -f *.wav` 沒有符合的檔案時會報錯。
