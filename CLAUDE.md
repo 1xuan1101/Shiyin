@@ -1,12 +1,13 @@
 # CLAUDE.md
 
-拾音 Shiyin 是 macOS 原生的會議紀錄 app（SwiftUI，macOS 26）。目前是第三版（3.0.0）：
+拾音 Shiyin 是 macOS 原生的會議紀錄 app（SwiftUI，macOS 26）。目前是 3.1.0（第三版加上英文版）：
 
 - 錄音：AVAudioEngine 收麥克風、Core Audio process tap 收電腦聲音，寫成雙聲道 WAV（`Sources/Shiyin/Capture/`）
-- 即時逐字稿：系統的 SpeechAnalyzer（zh_TW）
+- 即時逐字稿：系統的 SpeechAnalyzer（zh_TW 或 en_US，依會議語言）
 - 正式轉錄：whisper.cpp（官方 XCFramework）+ Breeze ASR 25 GGML q8_0，可以改用 macOS 內建（SpeechAnalyzer 讀檔）；說話者辨識：FluidAudio（`Sources/Shiyin/Transcribe/`）
 - 整理：claude CLI、codex CLI、Anthropic API、OpenAI API（`Sources/Shiyin/Notes/`）
 - 資料庫：GRDB（SQLite、FTS5 全文搜尋）
+- 多語言：介面繁中、英文（跟著 macOS 語言）；每場會議另外有會議語言（中文／英文），決定轉錄、整理、匯出用哪個語言（design §16）
 - 發布：自簽憑證或 ad-hoc 簽章的 DMG（沒有 Apple 開發者帳號）
 
 不需要 Python、Homebrew、ffmpeg。第二版（Python + mlx-whisper）的規格在 `docs/archive/v2/`，選型依據在 `docs/spikes/asr-engines.md`。
@@ -33,7 +34,9 @@
 scripts/build-app.sh             # 建置 release 版到 build/Shiyin.app（實際在 ~/Library/Caches/ShiyinBuild/app）
 scripts/build-app.sh --install   # 建置並安裝到 ~/Applications
 scripts/build-app.sh --debug     # DEBUG 版：含驗證用控制通道（沿用第二版，見 docs/archive/v2/design.md §13）
-scripts/make-dmg.sh              # release 建置並產生 DMG（dist/Shiyin-<版本>.dmg，含安裝說明 PDF）
+scripts/make-dmg.sh              # release 建置並產生 DMG（dist/Shiyin-<版本>.dmg，含中英文安裝說明 PDF）
+scripts/dev/l10n.py check        # 抽出介面字串合併進翻譯表，列出缺英文的條目和沒查表的中文（有問題時 exit 1）
+scripts/dev/l10n.py apply <翻譯.json>   # 寫入英文翻譯：{"中文鍵": "English"}，複數用 {"one": …, "other": …}
 scripts/make-signing-cert.sh     # 建立自簽憑證；加 --trust 信任它（要使用者輸入登入密碼）
 scripts/export-signing-cert.sh --to-github <owner/repo>   # 把自簽憑證設成 GitHub Actions 的 secrets（私鑰會離開電腦，要使用者同意）
 # CI：.github/workflows/release.yml，推 v* tag 就建置並發布 Release；手動執行只產出 artifact
@@ -55,6 +58,13 @@ sqlite3 ~/Library/Application\ Support/Shiyin/shiyin.sqlite # 看資料
 - 從 Finder 開的 app 拿不到使用者 shell 的 PATH。要執行 claude、codex 時，用固定路徑，或在子程序的環境變數裡補上 PATH。
 - 回覆和文件一律用繁體中文（台灣用語）。
 
+## 介面文字（3.1 起）
+
+- 程式裡照樣寫中文；SwiftUI 的字面值會自動查 `Resources/Localizable.xcstrings`，其他地方（錯誤、提示、通知、狀態文字）要包 `String(localized:)`。鍵就是中文原文。
+- 改過介面文字一定要跑 `scripts/dev/l10n.py check`，再把新條目的英文用 `apply` 寫進去。不會顯示在介面上的中文行尾加 `// l10n-skip`。
+- 同一句中文在不同地方要不同的英文時，用 `MeetingLanguage.ui(zh:en:)`；依會議語言（不是介面語言）的文字用 `meeting.meetingLanguage.text(zh:en:)`，例如匯出、預設說話者名稱。
+- 中文提示詞、中文匯出格式要跟 3.0 一字不差，改英文版時不要動到中文那一份。
+
 ## 驗證時要注意
 
 - 使用者可能正在用電腦：
@@ -65,6 +75,7 @@ sqlite3 ~/Library/Application\ Support/Shiyin/shiyin.sqlite # 看資料
 - 截圖：
   - `shiyinctl snapshot` 用 ImageRenderer，不會跳出視窗，但畫不出 AppKit 元件（TextField、Picker、ScrollView 會變成黃色佔位框），適合看排版、顏色。
   - 要看真正的畫面，用 `screencapture -x -o -l <視窗編號>` 只擷取拾音的視窗（視窗編號用 CGWindowListCopyWindowInfo 依 PID 找）。螢幕鎖定時拍不到。
+- 英文介面：直接執行 `build/Shiyin.app/Contents/MacOS/Shiyin -AppleLanguages "(en)"`（要用示範資料時前面加 `SHIYIN_HOME=…`）；中文介面就是系統語言。改會議語言用 `shiyinctl language <id> zh|en`。
 - 還沒完成首次使用引導的話，每次啟動都會打開引導視窗，測試時記得用 `shiyinctl closewindow onboarding` 關掉。
 - 測試資料會寫進使用者真正的資料庫。測完用 `shiyinctl purge <id>` 刪掉自己建立的會議，改過的設定用 `defaults delete com.weiwei.shiyin <key>` 還原。
 - 說話者辨識不能用 `say` 合成的聲音測（會判成同一人），要用真人錄音，例如 AMI 會議語料（`~/FluidAudioDatasets`）。
