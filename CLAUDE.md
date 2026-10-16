@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-拾音 Shiyin 是 macOS 原生的會議紀錄 app（SwiftUI，macOS 26）。目前是 3.2.0（第三版加上英文版、開源準備、轉錄準確度）：
+拾音 Shiyin 是 macOS 原生的會議紀錄 app（SwiftUI，macOS 26）。目前是 3.2.1（第三版加上英文版、開源準備、轉錄準確度）：
 
 - 錄音：AVAudioEngine 收麥克風、Core Audio process tap 收電腦聲音，寫成雙聲道 WAV（`Sources/Shiyin/Capture/`）
 - 即時逐字稿：系統的 SpeechAnalyzer（zh_TW 或 en_US，依會議語言）
@@ -79,6 +79,8 @@ sqlite3 ~/Library/Application\ Support/Shiyin/shiyin.sqlite # 看資料
 - 從這個終端機（Claude Code）用 `open` 開 app，app 會繼承 Claude Code session 的環境變數，子程序的 `claude` 會沿用這個 session 的登入。要模擬使用者的電腦（例如沒登入）時，用 `env -i HOME=… PATH=/usr/bin:/bin SHIYIN_HOME=… <app>/Contents/MacOS/Shiyin &` 啟動。
 - 英文介面：直接執行 `build/Shiyin.app/Contents/MacOS/Shiyin -AppleLanguages "(en)"`（要用示範資料時前面加 `SHIYIN_HOME=…`）；中文介面就是系統語言。改會議語言用 `shiyinctl language <id> zh|en`。
 - 還沒完成首次使用引導的話，每次啟動都會打開引導視窗，測試時記得用 `shiyinctl closewindow onboarding` 關掉。
+- 編輯器、對話框的按鈕（完成、取消、儲存）要在真的 app 上用 AX 按過，不能只用 shiyinctl 直接存資料：3.2.0 的會議紀錄編輯器一按「完成」就閃退，就是因為當時只用 `shiyinctl editnotes` 驗證。
+- 拾音的視窗在別的桌面（Space）時，AX 列不出它的視窗。要先用 System Events `set frontmost`，等 AX 看得到視窗再操作；使用者在用電腦時會被切回去，先跟使用者說一聲。
 - 測試資料會寫進使用者真正的資料庫。測完用 `shiyinctl purge <id>` 刪掉自己建立的會議，改過的設定用 `defaults delete com.weiwei.shiyin <key>` 還原。
 - 設定（UserDefaults `com.weiwei.shiyin`）跟使用者正式安裝的 app 共用，換 `SHIYIN_HOME` 也一樣。測完要 `defaults read com.weiwei.shiyin` 檢查有沒有留下測試改的值（曾經把 `defaultMeetingLanguage` 留成 en，使用者升級後新會議會預設英文）。
 - 說話者辨識不能用 `say` 合成的聲音測（會判成同一人），要用真人錄音，例如 AMI 會議語料（`~/FluidAudioDatasets`）。
