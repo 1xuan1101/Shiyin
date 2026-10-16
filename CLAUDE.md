@@ -41,6 +41,9 @@ scripts/dev/l10n.py apply <翻譯.json>   # 寫入英文翻譯：{"中文鍵": "
 scripts/make-signing-cert.sh     # 建立自簽憑證；加 --trust 信任它（要使用者輸入登入密碼）
 scripts/export-signing-cert.sh --to-github <owner/repo>   # 把自簽憑證設成 GitHub Actions 的 secrets（私鑰會離開電腦，要使用者同意）
 # CI：.github/workflows/release.yml，推 v* tag 就建置並發布 Release；手動執行只產出 artifact
+node site/build.mjs              # 產生官網到 site/dist（讀 GitHub Releases，不用裝套件）；node site/serve.mjs 本機預覽 http://localhost:4321/
+site/make-images.sh              # docs/images 的截圖或圖示換過後跑：產生官網用的 AVIF、favicon、分享預覽圖，連同 site/public 一起 commit
+# 官網 CI：.github/workflows/site.yml，推到 main 改到 site/ 或 docs/images/、發布新版之後，部署到 Cloudflare Pages
 swiftc scripts/dev/shiyinctl.swift -o ~/Library/Caches/ShiyinBuild/shiyinctl
 ~/Library/Caches/ShiyinBuild/shiyinctl state /tmp/s.json      # 讀狀態；其他指令見 Sources/Shiyin/Debug/DebugControl.swift
 open -g build/Shiyin.app
@@ -65,6 +68,22 @@ sqlite3 ~/Library/Application\ Support/Shiyin/shiyin.sqlite # 看資料
 - 改過介面文字一定要跑 `scripts/dev/l10n.py check`，再把新條目的英文用 `apply` 寫進去。不會顯示在介面上的中文行尾加 `// l10n-skip`。
 - 同一句中文在不同地方要不同的英文時，用 `MeetingLanguage.ui(zh:en:)`；依會議語言（不是介面語言）的文字用 `meeting.meetingLanguage.text(zh:en:)`，例如匯出、預設說話者名稱。
 - 中文提示詞、中文匯出格式要跟 3.0 一字不差，改英文版時不要動到中文那一份。
+
+## 發布新版的說明文字
+
+官網的版本說明直接讀 GitHub Release（`docs/website/design.md` §7），格式不對時官網建置失敗、不會更新。tag 的說明文字（`git tag -a vX.Y.Z -F 說明.txt`，會變成 Release 的內容）一律寫成：
+
+```
+拾音 3.3.0：日文會議、自動偵測會議語言
+- 一行一條，用「- 」開頭
+- 寫使用者看得到的改變，跟 app 用同樣的詞
+
+Shiyin 3.3.0: Japanese meetings and automatic language detection
+- One item per line, starting with "- "
+- What users will notice, in the app's own words
+```
+
+中文一段、空一行、英文一段；標題的版本號要跟 tag 一致，「：副標」可以省略。發布前可以先用 `node site/build.mjs --releases <檔案>` 拿一份跟 GitHub API 同樣格式的 JSON 試建置。
 
 ## 驗證時要注意
 
