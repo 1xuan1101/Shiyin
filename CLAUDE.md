@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-拾音 Shiyin 是 macOS 原生的會議紀錄 app（SwiftUI，macOS 26）。目前是 3.1.1（第三版加上英文版、開源準備）：
+拾音 Shiyin 是 macOS 原生的會議紀錄 app（SwiftUI，macOS 26）。目前是 3.2.0（第三版加上英文版、開源準備、轉錄準確度）：
 
 - 錄音：AVAudioEngine 收麥克風、Core Audio process tap 收電腦聲音，寫成雙聲道 WAV（`Sources/Shiyin/Capture/`）
 - 即時逐字稿：系統的 SpeechAnalyzer（zh_TW 或 en_US，依會議語言）
@@ -80,6 +80,7 @@ sqlite3 ~/Library/Application\ Support/Shiyin/shiyin.sqlite # 看資料
 - 英文介面：直接執行 `build/Shiyin.app/Contents/MacOS/Shiyin -AppleLanguages "(en)"`（要用示範資料時前面加 `SHIYIN_HOME=…`）；中文介面就是系統語言。改會議語言用 `shiyinctl language <id> zh|en`。
 - 還沒完成首次使用引導的話，每次啟動都會打開引導視窗，測試時記得用 `shiyinctl closewindow onboarding` 關掉。
 - 測試資料會寫進使用者真正的資料庫。測完用 `shiyinctl purge <id>` 刪掉自己建立的會議，改過的設定用 `defaults delete com.weiwei.shiyin <key>` 還原。
+- 設定（UserDefaults `com.weiwei.shiyin`）跟使用者正式安裝的 app 共用，換 `SHIYIN_HOME` 也一樣。測完要 `defaults read com.weiwei.shiyin` 檢查有沒有留下測試改的值（曾經把 `defaultMeetingLanguage` 留成 en，使用者升級後新會議會預設英文）。
 - 說話者辨識不能用 `say` 合成的聲音測（會判成同一人），要用真人錄音，例如 AMI 會議語料（`~/FluidAudioDatasets`）。
 - 模擬錄音（`shiyinctl record-sim <檔案> <倍速> <1=雙聲道>`）的雙聲道是同一個讀檔迴圈同時送兩個聲道。不要改成兩個獨立的音源：高倍速時兩邊速度不同，寫檔時會補靜音，檔案變長，那是測試工具的假象。
 - 只想確認能不能編譯時，用 `swift build -c debug --arch arm64 --disable-keychain --scratch-path ~/Library/Caches/ShiyinBuild`，不會動到正在跑的 app；`build-app.sh` 會先結束 app（有長時間測試在跑時不要執行）。
