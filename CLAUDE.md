@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-拾音 Shiyin 是 macOS 原生的會議紀錄 app（SwiftUI，macOS 26）。目前是 3.1.0（第三版加上英文版）：
+拾音 Shiyin 是 macOS 原生的會議紀錄 app（SwiftUI，macOS 26）。目前是 3.1.1（第三版加上英文版、開源準備）：
 
 - 錄音：AVAudioEngine 收麥克風、Core Audio process tap 收電腦聲音，寫成雙聲道 WAV（`Sources/Shiyin/Capture/`）
 - 即時逐字稿：系統的 SpeechAnalyzer（zh_TW 或 en_US，依會議語言）
@@ -36,6 +36,7 @@ scripts/build-app.sh --install   # 建置並安裝到 ~/Applications
 scripts/build-app.sh --debug     # DEBUG 版：含驗證用控制通道（沿用第二版，見 docs/archive/v2/design.md §13）
 scripts/make-dmg.sh              # release 建置並產生 DMG（dist/Shiyin-<版本>.dmg，含中英文安裝說明 PDF）
 scripts/dev/l10n.py check        # 抽出介面字串合併進翻譯表，列出缺英文的條目和沒查表的中文（有問題時 exit 1）
+scripts/dev/make-third-party-licenses.sh   # 更新套件版本後重跑：產生 Resources/ThirdPartyLicenses.txt（「關於拾音」和 DMG 附的授權條款）
 scripts/dev/l10n.py apply <翻譯.json>   # 寫入英文翻譯：{"中文鍵": "English"}，複數用 {"one": …, "other": …}
 scripts/make-signing-cert.sh     # 建立自簽憑證；加 --trust 信任它（要使用者輸入登入密碼）
 scripts/export-signing-cert.sh --to-github <owner/repo>   # 把自簽憑證設成 GitHub Actions 的 secrets（私鑰會離開電腦，要使用者同意）
