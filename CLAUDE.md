@@ -1,13 +1,13 @@
 # CLAUDE.md
 
-拾音 Shiyin 是 macOS 原生的會議紀錄 app（SwiftUI，macOS 26）。目前是 3.2.1（第三版加上英文版、開源準備、轉錄準確度）：
+拾音 Shiyin 是 macOS 原生的會議紀錄 app（SwiftUI，macOS 26）。目前是 3.3.0（第三版加上英文版、開源準備、轉錄準確度、日文）：
 
 - 錄音：AVAudioEngine 收麥克風、Core Audio process tap 收電腦聲音，寫成雙聲道 WAV（`Sources/Shiyin/Capture/`）
-- 即時逐字稿：系統的 SpeechAnalyzer（zh_TW 或 en_US，依會議語言）
-- 正式轉錄：whisper.cpp（官方 XCFramework）+ Breeze ASR 25 GGML q8_0，可以改用 macOS 內建（SpeechAnalyzer 讀檔）；說話者辨識：FluidAudio（`Sources/Shiyin/Transcribe/`）
+- 即時逐字稿：系統的 SpeechAnalyzer（zh_TW、en_US 或 ja_JP，依會議語言）
+- 正式轉錄：whisper.cpp（官方 XCFramework）+ Breeze ASR 25 GGML q8_0，可以改用 macOS 內建（SpeechAnalyzer 讀檔）；日文會議用 Whisper large-v3-turbo q5_0；說話者辨識：FluidAudio（`Sources/Shiyin/Transcribe/`）
 - 整理：claude CLI、codex CLI、Anthropic API、OpenAI API（`Sources/Shiyin/Notes/`）
 - 資料庫：GRDB（SQLite、FTS5 全文搜尋）
-- 多語言：介面繁中、英文（跟著 macOS 語言）；每場會議另外有會議語言（中文／英文），決定轉錄、整理、匯出用哪個語言（design §16）
+- 多語言：介面繁中、英文（跟著 macOS 語言）；每場會議另外有會議語言（中文／英文／日文），決定轉錄、整理、匯出用哪個語言（design §16、§18）；錄音開始後用 Whisper base 自動偵測（§18.8）
 - 發布：自簽憑證或 ad-hoc 簽章的 DMG（沒有 Apple 開發者帳號）
 
 不需要 Python、Homebrew、ffmpeg。第二版（Python + mlx-whisper）的規格在 `docs/archive/v2/`，選型依據在 `docs/spikes/asr-engines.md`。
