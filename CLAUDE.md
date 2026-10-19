@@ -1,10 +1,10 @@
 # CLAUDE.md
 
-拾音 Shiyin 是 macOS 原生的會議紀錄 app（SwiftUI，macOS 26）。目前是 3.4.1（第三版加上英文版、開源準備、轉錄準確度、日文、更多整理工具；3.4.1 是穩定性修正）：
+拾音 Shiyin 是 macOS 原生的會議紀錄 app（SwiftUI，macOS 26）。目前是 3.5.0（第三版加上英文版、開源準備、轉錄準確度、日文、更多整理工具、穩定性修正；3.5 加上草稿紀錄、聲紋、猜說話者、對會議提問、偵測會議）：
 
 - 錄音：AVAudioEngine 收麥克風、Core Audio process tap 收電腦聲音，寫成雙聲道 WAV（`Sources/Shiyin/Capture/`）
 - 即時逐字稿：系統的 SpeechAnalyzer（zh_TW、en_US 或 ja_JP，依會議語言）
-- 正式轉錄：whisper.cpp（官方 XCFramework）+ Breeze ASR 25 GGML q8_0，可以改用 macOS 內建（SpeechAnalyzer 讀檔）；日文會議用 Whisper large-v3-turbo q5_0；說話者辨識：FluidAudio（`Sources/Shiyin/Transcribe/`）
+- 正式轉錄：whisper.cpp（官方 XCFramework）+ Breeze ASR 25 GGML q8_0，可以改用 macOS 內建（SpeechAnalyzer 讀檔），模型還沒下載好時也先用內建；日文會議用 Whisper large-v3-turbo q5_0；whisper 從檔案依序讀、每 10 分鐘一段（design §21.16）；說話者辨識：FluidAudio（`Sources/Shiyin/Transcribe/`），聲紋比對在 `Store/Voiceprints.swift`
 - 整理：claude CLI、codex CLI、Anthropic API、OpenAI API、Gemini API、OpenAI 相容 API，共同介面 `LLMBackend`（`Sources/Shiyin/Notes/`，各家在 `Notes/Backends/`，design §19）
 - 資料庫：GRDB（SQLite、FTS5 全文搜尋）
 - 多語言：介面繁中、英文（跟著 macOS 語言）；每場會議另外有會議語言（中文／英文／日文），決定轉錄、整理、匯出用哪個語言（design §16、§18）；錄音開始後用 Whisper base 自動偵測（§18.8）
@@ -105,6 +105,7 @@ Shiyin 3.3.0: Japanese meetings and automatic language detection
 - 要用使用者的真實資料測（例如 migration）時，另外建一個 `SHIYIN_HOME`：資料庫用 `sqlite3 <正式資料庫> ".backup <複本>"` 複製（app 開著也安全）；`audio/recording/`（錄音中的暫存檔）不要複製，複本裡錄音中的會議（`source='recording'`、`audio_file=''`）刪掉；DEBUG 版加 `-llmProvider none -autoSummarize NO -correctTranscript NO` 啟動。2026-10-19 曾經複製到使用者正在錄的會議，DEBUG 版把它當成當掉的錄音復原、轉錄，還用使用者的 Claude 整理了一次。
 - 設定（UserDefaults `com.weiwei.shiyin`）跟使用者正式安裝的 app 共用，換 `SHIYIN_HOME` 也一樣。測完要 `defaults read com.weiwei.shiyin` 檢查有沒有留下測試改的值（曾經把 `defaultMeetingLanguage` 留成 en，使用者升級後新會議會預設英文）。
 - 說話者辨識不能用 `say` 合成的聲音測（會判成同一人），要用真人錄音，例如 AMI 會議語料（`~/FluidAudioDatasets`）。
+- 轉錄的記憶體、分段（3.5）：`shiyinctl transcribe-eval` 的輸出有各階段的記憶體峰值（`memory`）和分段位置（`seams`）；設定 JSON 加 `"chunkSeconds": 0` 不分段。量記憶體要每次重開 app（同一個 app 連續跑，前一次留下的記憶體會算進去）。
 - 模擬錄音（`shiyinctl record-sim <檔案> <倍速> <1=雙聲道>`）的雙聲道是同一個讀檔迴圈同時送兩個聲道。不要改成兩個獨立的音源：高倍速時兩邊速度不同，寫檔時會補靜音，檔案變長，那是測試工具的假象。
 - 只想確認能不能編譯時，用 `swift build -c debug --arch arm64 --disable-keychain --scratch-path ~/Library/Caches/ShiyinBuild`，不會動到正在跑的 app；`build-app.sh` 會先結束 app（有長時間測試在跑時不要執行）。
 - 測 app 內更新：`scripts/dev/make-update-fixtures.sh <資料夾>` 產生正常、SHA 不符、簽章不符、同版本四種更新檔，在那個資料夾跑 `python3 -m http.server 18765 --bind 127.0.0.1`，再用 `shiyinctl setupdateurl http://127.0.0.1:18765/good.json`、`checkupdate`、`installupdate`。
