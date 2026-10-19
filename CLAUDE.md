@@ -118,6 +118,7 @@ Shiyin 3.3.0: Japanese meetings and automatic language detection
 - 用腳本做大段替換後，檢查檔案的行數和結尾：曾經因為替換腳本漏接後半段，把整個檔案截斷。
 - 整理工具（3.4）：測 API 用假伺服器 `scripts/dev/fake-llm-server.py` 加上 `shiyinctl llmurl`；key、整理工具、模型用只放記憶體的 `llmkey`、`llmprovider`。DEBUG 版（3.4.1 起）預設不讀真的鑰匙圈，要測時加 `-debugRealKeychain YES`（會讀使用者存的 key，可能跳出確認視窗）。**不要用 `setkey` 和 `defaults write` 測**：鑰匙圈項目綁定建立它的 app 簽章，ad-hoc 重建後或使用者自己的拾音去讀都會跳出系統的存取確認；整理工具設定跟使用者的拾音共用。
 - 使用者的拾音可能也開著（`~/Desktop/Shiyin.app`），跟測試用的 DEBUG 版共用設定和視窗狀態。DEBUG 版用 `open -g -n … --args -ApplePersistenceIgnoreState YES` 啟動，否則可能照上次被 `pkill` 時的狀態還原成一個視窗都沒有；設定值可以用啟動參數帶（`-llmProvider gemini`），只在這次執行有效。
+- 開關類設定的啟動參數（`-autoSummarize NO`、`-correctTranscript NO`）在 3.4.1 以前的建置沒有作用：讀進來是字串 "NO"，`as? Bool` 轉不成功就用預設值（開）。3.5 起 `AppSettings` 改用 `bool(forKey:)`。測舊版時不要以為加了參數就不會整理；`-llmProvider none` 一直有效。
 - 要跟舊版比對（例如匯出格式）時，用 `git worktree` 建置舊版的 DEBUG 版。3.4.0 以前的 DEBUG 版啟動時就讀真的鑰匙圈，會在使用者畫面上一直跳出存取確認、app 卡住（2026-10-19），建置前先把 worktree 裡的 `Keychain.get` 改成直接 `return nil`；啟動後確認 log 有「debug control installed」。`shiyinctl` 會廣播給所有 DEBUG 版，同時只能開一個，3.4.0 的 `quit` 不會結束 app，要 `kill` 並確認程序真的不在了（曾經因為舊版沒結束，兩個版本同時寫同一個匯出檔）。
 - 螢幕上鎖時 AX 列不出視窗。筆記輸入框可以用 `shiyinctl notestype`、`notesvalue` 直接操作背後的 NSTextView。
 - 設定頁、引導在背景打不開又不想搶前景時，用 `shiyinctl preview <settings|onboarding [步驟]>` 開在桌面層（被所有視窗蓋住），再 `screencapture -l` 截。設定頁打開時可能把欄位寫回共用設定，測完 `defaults read` 比對。
