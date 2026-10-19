@@ -10,7 +10,7 @@
 - 多語言：介面繁中、英文（跟著 macOS 語言）；每場會議另外有會議語言（中文／英文／日文），決定轉錄、整理、匯出用哪個語言（design §16、§18）；錄音開始後用 Whisper base 自動偵測（§18.8）
 - 發布：自簽憑證或 ad-hoc 簽章的 DMG（沒有 Apple 開發者帳號）
 
-不需要 Python、Homebrew、ffmpeg。第二版（Python + mlx-whisper）的規格在 `docs/archive/v2/`，選型依據在 `docs/spikes/asr-engines.md`。
+不需要 Python、Homebrew、ffmpeg。選型的理由在 design.md 的決策紀錄（D#）。已經刪掉的舊文件（第二版的規格 `docs/archive/v2/`、選型實驗 `docs/spikes/`、3.4.0 以前完整的 `docs/tasks.md`）用 `git show b621ed6:<路徑>` 看。
 
 ## 開發流程：SDD（規格驅動）
 
@@ -20,12 +20,13 @@
 |---|---|
 | `docs/requirements.md` | 要做什麼：需求編號 R#、N#，第 8 節是驗收結果 |
 | `docs/design.md` | 怎麼做：架構、資料模型、提示詞、介面、決策紀錄 D# |
-| `docs/tasks.md` | 實作順序 T#，每項都有驗證方式和結果，最後是變更紀錄 |
+| `docs/tasks.md` | 還沒完成的任務，每項都有驗證方式；做完就刪掉 |
 
 開發時的規則：
-- 開工前先讀這三份文件，從 `tasks.md` 還沒打勾的任務接著做。
-- 每完成一項任務，照它的「驗證」實際跑過一次才打勾，並寫下跑了什麼、結果如何。`[~]` 表示程式完成，但有部分驗證要等使用者（權限、真實錄音、API key）。
-- 程式要偏離 `design.md` 時，先改 `design.md`，再到 `tasks.md` 的「變更紀錄」記一筆，最後才改程式。
+- 開工前先讀這三份文件，從 `tasks.md` 的任務接著做。
+- 每完成一項任務，照它的「驗證」實際跑過一次，從 `tasks.md` 刪掉，跑了什麼、結果如何寫在 commit 訊息。`[~]` 表示程式完成，但有部分驗證要等使用者（權限、真實錄音、API key），只寫還差什麼。
+- docs 只留還用得到的：做完的任務、用不到的文件直接刪掉，不另外留紀錄檔（都在 git 歷史裡）。
+- 程式要偏離 `design.md` 時，先改 `design.md`（重要的取捨寫進決策紀錄 D#），再改程式，commit 訊息寫原因。
 - 有新需求時，先寫進 `requirements.md`，再改設計、加任務。不要直接寫程式。
 
 ## 指令
@@ -33,7 +34,7 @@
 ```bash
 scripts/build-app.sh             # 建置 release 版到 build/Shiyin.app（實際在 ~/Library/Caches/ShiyinBuild/app）
 scripts/build-app.sh --install   # 建置並安裝到 ~/Applications
-scripts/build-app.sh --debug     # DEBUG 版：含驗證用控制通道（沿用第二版，見 docs/archive/v2/design.md §13）
+scripts/build-app.sh --debug     # DEBUG 版：含驗證用控制通道（指令見 Sources/Shiyin/Debug/DebugControl.swift）
 scripts/make-dmg.sh              # release 建置並產生 DMG（dist/Shiyin-<版本>.dmg，含中英文安裝說明 PDF）
 scripts/dev/l10n.py check        # 抽出介面字串合併進翻譯表，列出缺英文的條目和沒查表的中文（有問題時 exit 1）
 scripts/dev/make-third-party-licenses.sh   # 更新套件版本後重跑：產生 Resources/ThirdPartyLicenses.txt（「關於拾音」和 DMG 附的授權條款）
@@ -71,7 +72,7 @@ sqlite3 ~/Library/Application\ Support/Shiyin/shiyin.sqlite # 看資料
 
 ## 發布新版的說明文字
 
-官網的版本說明直接讀 GitHub Release（`docs/website/design.md` §7），格式不對時官網建置失敗、不會更新。tag 的說明文字（`git tag -a vX.Y.Z -F 說明.txt`，會變成 Release 的內容）一律寫成：
+官網的版本說明直接讀 GitHub Release（`docs/website.md` §7），格式不對時官網建置失敗、不會更新。tag 的說明文字（`git tag -a vX.Y.Z -F 說明.txt`，會變成 Release 的內容）一律寫成：
 
 ```
 拾音 3.3.0：日文會議、自動偵測會議語言
@@ -113,6 +114,7 @@ Shiyin 3.3.0: Japanese meetings and automatic language detection
 - `AVAudioFile` 關檔後 `length` 會變 0，不能用它判斷錄了多久（曾經因此刪掉整場錄音）。
 - zsh 內建的 `log` 會蓋掉系統指令，要用 `/usr/bin/log`；zsh 不會依 IFS 切字串；`rm -f *.wav` 沒有符合的檔案時會報錯。
 - bash 腳本裡，變數後面緊接全形字時要寫成 `${VAR}`，否則全形字的位元組會被吃進變數名稱。
+- 用腳本做大段替換後，檢查檔案的行數和結尾：曾經因為替換腳本漏接後半段，把整個檔案截斷。
 - 整理工具（3.4）：測 API 用假伺服器 `scripts/dev/fake-llm-server.py` 加上 `shiyinctl llmurl`；key、整理工具、模型用只放記憶體的 `llmkey`、`llmprovider`。**不要用 `setkey` 和 `defaults write` 測**：鑰匙圈項目綁定建立它的 app 簽章，ad-hoc 重建後或使用者自己的拾音去讀都會跳出系統的存取確認；整理工具設定跟使用者的拾音共用。
 - 使用者的拾音可能也開著（`~/Desktop/Shiyin.app`），跟測試用的 DEBUG 版共用設定和視窗狀態。DEBUG 版用 `open -g -n … --args -ApplePersistenceIgnoreState YES` 啟動，否則可能照上次被 `pkill` 時的狀態還原成一個視窗都沒有；設定值可以用啟動參數帶（`-llmProvider gemini`），只在這次執行有效。
 - 設定頁、引導在背景打不開又不想搶前景時，用 `shiyinctl preview <settings|onboarding [步驟]>` 開在桌面層（被所有視窗蓋住），再 `screencapture -l` 截。設定頁打開時可能把欄位寫回共用設定，測完 `defaults read` 比對。
