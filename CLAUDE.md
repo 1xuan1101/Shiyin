@@ -122,4 +122,6 @@ Shiyin 3.3.0: Japanese meetings and automatic language detection
 - 開關類設定的啟動參數（`-autoSummarize NO`、`-correctTranscript NO`）在 3.4.1 以前的建置沒有作用：讀進來是字串 "NO"，`as? Bool` 轉不成功就用預設值（開）。3.5 起 `AppSettings` 改用 `bool(forKey:)`。測舊版時不要以為加了參數就不會整理；`-llmProvider none` 一直有效。
 - 要跟舊版比對（例如匯出格式）時，用 `git worktree` 建置舊版的 DEBUG 版。3.4.0 以前的 DEBUG 版啟動時就讀真的鑰匙圈，會在使用者畫面上一直跳出存取確認、app 卡住（2026-10-19），建置前先把 worktree 裡的 `Keychain.get` 改成直接 `return nil`；啟動後確認 log 有「debug control installed」。`shiyinctl` 會廣播給所有 DEBUG 版，同時只能開一個，3.4.0 的 `quit` 不會結束 app，要 `kill` 並確認程序真的不在了（曾經因為舊版沒結束，兩個版本同時寫同一個匯出檔）。
 - 螢幕上鎖時 AX 列不出視窗。筆記輸入框可以用 `shiyinctl notestype`、`notesvalue` 直接操作背後的 NSTextView。
+- SwiftUI 的 `Menu` 在畫面上只畫標題的文字（標籤裡的背景、膠囊標記會被拿掉），`shiyinctl snapshot` 卻畫得出來；HStack 裡的 Text 加 `.fixedSize(horizontal: false, vertical: true)`，量最小高度時會用很窄的寬度，整個視窗的內容被往上推（3.5 驗收時都是在真的畫面上才發現）。ScrollView、popover 裡的 Text 才可以用 fixedSize。
+- 用 AX 操作的小技巧：設定頁要捲動時，設垂直捲軸的 `AXValue`（0～1）；選單的「設定⋯」用的是 ⋯（U+22EF）；只想按某個視窗裡的按鈕時，從那個視窗（`AXWindows` 裡標題相符的）往下找，不然會按到別的視窗裡同名的按鈕。
 - 設定頁、引導在背景打不開又不想搶前景時，用 `shiyinctl preview <settings|onboarding [步驟]>` 開在桌面層（被所有視窗蓋住），再 `screencapture -l` 截。設定頁打開時可能把欄位寫回共用設定，測完 `defaults read` 比對。
