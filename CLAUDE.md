@@ -125,5 +125,6 @@ Shiyin 3.3.0: Japanese meetings and automatic language detection
 - 螢幕上鎖時 AX 列不出視窗。筆記輸入框可以用 `shiyinctl notestype`、`notesvalue` 直接操作背後的 NSTextView。
 - SwiftUI 的 `Menu` 在畫面上只畫標題的文字（標籤裡的背景、膠囊標記會被拿掉），`shiyinctl snapshot` 卻畫得出來；HStack 裡的 Text 加 `.fixedSize(horizontal: false, vertical: true)`，量最小高度時會用很窄的寬度，整個視窗的內容被往上推（3.5 驗收時都是在真的畫面上才發現）。ScrollView、popover 裡的 Text 才可以用 fixedSize。
 - 錄音中的效能（3.5.1）：SwiftUI 裡任何一個 view 變了，整個視窗都要重新排版、重算最小尺寸，所以一直在變的東西（音量條）不要用 SwiftUI 觀察的屬性（改用 AppKit 的 `LevelMeter` 自己定時讀），`@Observable` 的屬性只在值真的變了才設。量 CPU：用使用者的錄音 `record-sim` 1 倍速，暖機 30 秒後取 `ps -o time` 的差；`metrics` 的 `maxMainGapMs` 是主執行緒最長卡住多久、`volatileUpdate` 是即時文字更新幾次；`livescroll <0～1>` 捲即時逐字稿（等於拖捲軸）。視窗不在目前的桌面時，程式內的輔助使用元件樹是空的，`press` 找不到按鈕。
+- 說話者的修正（3.6）：`mergespeaker`、`reassign`、`undospeaker`、`speakerhint <id> dismiss`；`voiceprint-eval` 的設定加 `dump` 會倒出每個片段的聲紋，用 numpy 離線試判斷方法（分群時同一個片段的說話者會被強制分開，所以碰撞率只在分出 1 群時有用）。收音提醒（3.7）：state 的 `recorder.levelCheck`；用 afconvert 轉成 16 kHz、numpy 照同樣的算法先離線算，再用 `record-sim` 驗證。視窗在別的桌面時 AX 列不出它的元件（小視窗、popover、右鍵選單都按不到），`shiyinctl summon` 把視窗移到目前的桌面（會出現在使用者的畫面上，先確認使用者不在電腦前）。
 - 用 AX 操作的小技巧：設定頁要捲動時，設垂直捲軸的 `AXValue`（0～1）；選單的「設定⋯」用的是 ⋯（U+22EF）；只想按某個視窗裡的按鈕時，從那個視窗（`AXWindows` 裡標題相符的）往下找，不然會按到別的視窗裡同名的按鈕。
 - 設定頁、引導在背景打不開又不想搶前景時，用 `shiyinctl preview <settings|onboarding [步驟]>` 開在桌面層（被所有視窗蓋住），再 `screencapture -l` 截。設定頁打開時可能把欄位寫回共用設定，測完 `defaults read` 比對。
