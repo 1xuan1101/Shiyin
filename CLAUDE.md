@@ -105,6 +105,7 @@ Shiyin 3.3.0: Japanese meetings and automatic language detection
 - 要用使用者的真實資料測（例如 migration）時，另外建一個 `SHIYIN_HOME`：資料庫用 `sqlite3 <正式資料庫> ".backup <複本>"` 複製（app 開著也安全）；`audio/recording/`（錄音中的暫存檔）不要複製，複本裡錄音中的會議（`source='recording'`、`audio_file=''`）刪掉；DEBUG 版加 `-llmProvider none -autoSummarize NO -correctTranscript NO` 啟動。2026-10-19 曾經複製到使用者正在錄的會議，DEBUG 版把它當成當掉的錄音復原、轉錄，還用使用者的 Claude 整理了一次。
 - 設定（UserDefaults `com.weiwei.shiyin`）跟使用者正式安裝的 app 共用，換 `SHIYIN_HOME` 也一樣。測完要 `defaults read com.weiwei.shiyin` 檢查有沒有留下測試改的值（曾經把 `defaultMeetingLanguage` 留成 en，使用者升級後新會議會預設英文）。
 - 說話者辨識不能用 `say` 合成的聲音測（會判成同一人），要用真人錄音，例如 AMI 會議語料（`~/FluidAudioDatasets`）。
+- 說話者分不出人（3.5.1）：`shiyinctl voiceprint-eval` 的設定每一項可以加 `threshold`、`minSpeakers`、`numSpeakers`（字串），同一段錄音換設定比較分出幾個人；`shiyinctl rediarize <id> <人數|auto>` 只重新辨識說話者。
 - 轉錄的記憶體、分段（3.5）：`shiyinctl transcribe-eval` 的輸出有各階段的記憶體峰值（`memory`）和分段位置（`seams`）；設定 JSON 加 `"chunkSeconds": 0` 不分段。量記憶體要每次重開 app（同一個 app 連續跑，前一次留下的記憶體會算進去）。
 - 模擬錄音（`shiyinctl record-sim <檔案> <倍速> <1=雙聲道>`）的雙聲道是同一個讀檔迴圈同時送兩個聲道。不要改成兩個獨立的音源：高倍速時兩邊速度不同，寫檔時會補靜音，檔案變長，那是測試工具的假象。
 - 只想確認能不能編譯時，用 `swift build -c debug --arch arm64 --disable-keychain --scratch-path ~/Library/Caches/ShiyinBuild`，不會動到正在跑的 app；`build-app.sh` 會先結束 app（有長時間測試在跑時不要執行）。
